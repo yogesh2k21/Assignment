@@ -14,6 +14,7 @@ import {
   Stack,
   Box,
 } from "@mui/joy";
+import { handleUpdateToCart } from "../services/api";
 
 export default function CartSidebar({
   isOpen,
@@ -21,17 +22,39 @@ export default function CartSidebar({
   cartItems,
   updateCart,
 }) {
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) {
-      // Remove the item from the cart if the new quantity is less than 1
-      updateCart((prev) => prev.filter((item) => item.id !== id));
-    } else {
-      // Update the quantity of the item in the cart
-      updateCart((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
-        )
-      );
+  const updateQuantity = async (item) => {
+    try {
+      const payload = {
+        item_id:item.id,
+        name:item.name,
+        quantity:item.newQuantity,
+        price:item.price
+      }
+      
+      // Call the backend to update the cart
+      await handleUpdateToCart(payload);
+
+      // Update the local state based on the backend response
+      updateCart((prev) => {
+        const existingItemIndex = prev.findIndex((el) => el.id === item.id);
+
+        if (existingItemIndex !== -1) {
+          if (item.newQuantity <= 0) {
+            // Remove the item if the new quantity is zero or less
+            return prev.filter((el) => el.id !== item.id);
+          } else {
+            // Update the quantity of the item
+            const updatedItems = [...prev];
+            updatedItems[existingItemIndex] = { ...updatedItems[existingItemIndex], quantity: item.newQuantity };
+            return updatedItems;
+          }
+        }
+
+        // If the item is not found, return the previous state
+        return prev;
+      });
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
     }
   };
 
@@ -89,7 +112,7 @@ export default function CartSidebar({
                   <IconButton
                     size="sm"
                     variant="outlined"
-                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                    onClick={() => updateQuantity({...item,newQuantity:item.quantity - 1})}
                   >
                     -
                   </IconButton>
@@ -102,7 +125,7 @@ export default function CartSidebar({
                   <IconButton
                     size="sm"
                     variant="outlined"
-                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    onClick={() => updateQuantity({...item,newQuantity:item.quantity + 1})}
                   >
                     +
                   </IconButton>

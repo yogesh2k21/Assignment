@@ -74,7 +74,7 @@ export default function Products({ addToCart }) {
         marginTop:3
       }}
     >
-      {products.map((product) => (
+      {products?.map((product) => (
         <Grid
           item
           xs={12}

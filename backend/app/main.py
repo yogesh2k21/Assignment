@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from app.routes import router
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI(title="e-com")
 
 origins = [
