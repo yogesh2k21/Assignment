@@ -14,7 +14,8 @@ import {
   Stack,
   Box,
 } from "@mui/joy";
-import { handleUpdateToCart } from "../services/api";
+import { useState, useEffect } from "react";
+import { handleUpdateToCart, getAvailableDiscounts } from "../services/api";
 
 export default function CartSidebar({
   isOpen,
@@ -22,39 +23,39 @@ export default function CartSidebar({
   cartItems,
   updateCart,
 }) {
+  const [discounts, setDiscounts] = useState([]);
+
   const updateQuantity = async (item) => {
     try {
       const payload = {
-        item_id:item.id,
-        name:item.name,
-        quantity:item.newQuantity,
-        price:item.price
-      }
-      
-      // Call the backend to update the cart
+        item_id: item.id,
+        name: item.name,
+        quantity: item.newQuantity,
+        price: item.price,
+      };
+
       await handleUpdateToCart(payload);
 
-      // Update the local state based on the backend response
       updateCart((prev) => {
         const existingItemIndex = prev.findIndex((el) => el.id === item.id);
 
         if (existingItemIndex !== -1) {
           if (item.newQuantity <= 0) {
-            // Remove the item if the new quantity is zero or less
             return prev.filter((el) => el.id !== item.id);
           } else {
-            // Update the quantity of the item
             const updatedItems = [...prev];
-            updatedItems[existingItemIndex] = { ...updatedItems[existingItemIndex], quantity: item.newQuantity };
+            updatedItems[existingItemIndex] = {
+              ...updatedItems[existingItemIndex],
+              quantity: item.newQuantity,
+            };
             return updatedItems;
           }
         }
 
-        // If the item is not found, return the previous state
         return prev;
       });
     } catch (error) {
-      console.error('Failed to update quantity:', error);
+      console.error("Failed to update quantity:", error);
     }
   };
 
@@ -62,6 +63,22 @@ export default function CartSidebar({
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      try {
+        const data = await getAvailableDiscounts();
+        console.log(data)
+        if (data && data?.codes.length > 0) {
+          setDiscounts(data.codes);
+        }
+      } catch (error) {
+        console.error("Failed to fetch discounts", error);
+      }
+    };
+
+    fetchDiscounts(); // Only runs once on mount
+  }, []);
 
   return (
     <Drawer
@@ -112,7 +129,12 @@ export default function CartSidebar({
                   <IconButton
                     size="sm"
                     variant="outlined"
-                    onClick={() => updateQuantity({...item,newQuantity:item.quantity - 1})}
+                    onClick={() =>
+                      updateQuantity({
+                        ...item,
+                        newQuantity: item.quantity - 1,
+                      })
+                    }
                   >
                     -
                   </IconButton>
@@ -125,7 +147,12 @@ export default function CartSidebar({
                   <IconButton
                     size="sm"
                     variant="outlined"
-                    onClick={() => updateQuantity({...item,newQuantity:item.quantity + 1})}
+                    onClick={() =>
+                      updateQuantity({
+                        ...item,
+                        newQuantity: item.quantity + 1,
+                      })
+                    }
                   >
                     +
                   </IconButton>
@@ -135,12 +162,49 @@ export default function CartSidebar({
           </List>
 
           <Divider />
-          <Box sx={{ p: 2 }}>
-            <Stack direction="row" justifyContent="space-between" mb={2}>
+          <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+            {discounts.length > 0 && (
+              <Box>
+                <Typography level="body-sm" mb={1}>
+                  Available Discounts
+                </Typography>
+                <Box
+                  component="select"
+                  sx={{
+                    width: "100%",
+                    p: 1.2,
+                    borderRadius: "md",
+                    border: "1px solid",
+                    borderColor: "neutral.outlinedBorder",
+                    fontSize: "sm",
+                    color: "text.primary",
+                    backgroundColor: "background.level1",
+                    outline: "none",
+                    "&:focus": {
+                      borderColor: "primary.outlinedBorder",
+                    },
+                  }}
+                >
+                  <option value="">-- Select a Discount --</option>
+                  {discounts.map((discount) => (
+                    <option key={discount} value={discount}>
+                      {discount}
+                    </option>
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
               <Typography level="title-md">Total:</Typography>
               <Typography level="title-lg">${total.toFixed(2)}</Typography>
             </Stack>
-            <Button fullWidth size="lg">
+
+            <Button fullWidth size="lg" variant="solid" color="primary">
               Proceed to Checkout
             </Button>
           </Box>
