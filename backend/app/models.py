@@ -18,3 +18,12 @@ class CheckoutRequest(BaseModel):
 class CheckoutResponse(BaseModel):
     total_amount: float
     discount_applied: bool = False
+
+class DiscountCodeResponse(BaseModel):
+    code: str
+
+class StatsResponse(BaseModel):
+    total_items_purchased: int
+    total_purchase_amount: float
+    discount_codes: list[dict]
+    total_discount_amount: float

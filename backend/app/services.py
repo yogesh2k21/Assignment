@@ -1,4 +1,10 @@
-from app.models import CartItem, CheckoutRequest, CheckoutResponse
+from app.models import (
+    CartItem,
+    CheckoutRequest,
+    CheckoutResponse,
+    DiscountCodeResponse,
+    StatsResponse,
+)
 from app import store
 from app.utility import generate_discount_code
 
@@ -78,4 +84,35 @@ def checkout_service(checkout_request: CheckoutRequest = None):
     store.cart.clear()
     return CheckoutResponse(
         total_amount=total_amount, discount_applied=discount_applied
+    )
+
+
+def generate_discount_code_service():
+    next_order_number = store.order_count + 1
+    if next_order_number % store.nth_discount == 0:
+        new_code = generate_discount_code()
+        store.discount_codes[new_code] = {"redeem": False}
+        return DiscountCodeResponse(code=new_code)
+    else:
+        remaining = store.nth_discount - (next_order_number % store.nth_discount)
+        return {
+            "message": f"No discount code generated. Next discount available after {remaining} more order(s)."
+        }
+
+
+def get_store_status_service():
+    total_items_ordered = sum(
+        item.quantity for order in store.order_history for item in order["items"]
+    )
+    total_purchase_amount = sum(order["total_amount"] for order in store.order_history)
+    discount_codes = [{code:status} for code, status in store.discount_codes.items()]
+    print(discount_codes)
+    total_discount_amount = sum(
+        order["discount_amount"] for order in store.order_history
+    )
+    return StatsResponse(
+        total_items_purchased=total_items_ordered,
+        total_purchase_amount=total_purchase_amount,
+        discount_codes=discount_codes,
+        total_discount_amount=total_discount_amount,
     )
