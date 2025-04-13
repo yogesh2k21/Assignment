@@ -9,6 +9,7 @@ This implementation provides a functional e-commerce API with client-facing cart
 - Basic frontend integration
 - Unit testing
 
+and in addition I have containerized the backend to demonstrate who it can be a cloud native solution
 ## Implemented Features
 # E-Commerce API - Core Endpoints
 
