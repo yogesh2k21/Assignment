@@ -20,6 +20,8 @@ import {
   getAvailableDiscounts,
   checkout,
 } from "../services/api";
+import CustomToaster from "./Snackbar/Toaster";
+import { toast, Bounce } from "react-toastify";
 
 export default function CartSidebar({
   isOpen,
@@ -42,6 +44,30 @@ export default function CartSidebar({
       };
 
       await handleUpdateToCart(payload);
+
+      if (item.newQuantity > 0) {
+        toast.success(`${item.name} quantity updated to ${item.newQuantity}!`, {
+          position: "bottom-left",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          transition: Bounce,
+        });
+      } else {
+        toast.success(`${item.name} Removed from Cart`, {
+          position: "bottom-left",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          transition: Bounce,
+        });
+      }
 
       updateCart((prev) => {
         const existingItemIndex = prev.findIndex((el) => el.id === item.id);
@@ -70,13 +96,22 @@ export default function CartSidebar({
     try {
       const order = await checkout(discountCode);
       console.log(order);
-      setCheckoutMessage(
-        `Order #${order.id} placed successfully! Total: $${order.final_amount}`
+      toast.success(
+        `Order placed successfully! Total: $${order.total_amount}`,
+        {
+          position: "bottom-left",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          transition: Bounce,
+        }
       );
       updateCart([]);
     } catch (error) {
       console.log(error.response?.data);
-      setCheckoutMessage(error.response?.data?.detail || "Checkout failed");
     }
   };
 

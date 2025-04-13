@@ -14,7 +14,7 @@ def add_item_to_cart_service(item: CartItem):
         store.cart[item.item_id].quantity += item.quantity
     else:
         store.cart[item.item_id] = item
-    return {"message": f"{item.quantity} x {item.name} added to cart"}
+    return {"message": f"{item.quantity} {item.name} added to cart"}
 
 
 def update_item_quantity_service(item: CartItem):

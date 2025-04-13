@@ -4,6 +4,9 @@ import Header from "./components/Header";
 import CartSidebar from "./components/CartSidebar";
 import Products from "./components/Products";
 import { handleAddToCart } from "./services/api";
+import { toast, Bounce } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import CustomToaster from "./components/Snackbar/Toaster";
 
 export default function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -11,16 +14,25 @@ export default function App() {
 
   const addToCart = async (product) => {
     try {
-      // Call the API to add the product to the cart
       const payload = {
-        item_id:product.id,
-        name:product.name,
-        price:product.price,
-        quantity:1
-      }
-      await handleAddToCart(payload);
+        item_id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+      };
+      const res = await handleAddToCart(payload);
 
-      // Update the local state with the new product
+      toast.success(res.message, {
+        position: "bottom-left",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        transition: Bounce,
+      });
+
       setCartItems((prev) => {
         const existingItem = prev.find((item) => item.id === product.id);
         return existingItem
@@ -32,21 +44,20 @@ export default function App() {
           : [...prev, { ...product, quantity: 1 }];
       });
     } catch (error) {
-      console.error('Failed to add to cart:', error);
+      console.error("Failed to add to cart:", error);
+      toast.error("Something went wrong. Try again!");
     }
   };
 
   return (
     <>
       <CssBaseline />
-
+      <CustomToaster/>
       <Header
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         openCart={() => setIsCartOpen(true)}
       />
-
       <Products addToCart={addToCart} />
-
       {isCartOpen && (
         <CartSidebar
           isOpen={isCartOpen}
