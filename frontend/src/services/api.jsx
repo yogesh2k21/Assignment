@@ -22,4 +22,24 @@ const handleUpdateToCart = async (product) => {
   }
 };
 
-export { handleAddToCart, handleUpdateToCart };
+const getAvailableDiscounts = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/discount/available`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available discounts:', error);
+    throw error;
+  }
+};
+
+const checkout = async (discountCode) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/checkout`, { discount_code: discountCode });
+    return response.data;
+  } catch (error) {
+    console.error('Error during checkout:', error);
+    throw error;
+  }
+};
+
+export { handleAddToCart, handleUpdateToCart, getAvailableDiscounts,checkout };

@@ -15,7 +15,11 @@ import {
   Box,
 } from "@mui/joy";
 import { useState, useEffect } from "react";
-import { handleUpdateToCart, getAvailableDiscounts } from "../services/api";
+import {
+  handleUpdateToCart,
+  getAvailableDiscounts,
+  checkout,
+} from "../services/api";
 
 export default function CartSidebar({
   isOpen,
@@ -24,6 +28,9 @@ export default function CartSidebar({
   updateCart,
 }) {
   const [discounts, setDiscounts] = useState([]);
+  const [selectedDiscount, setSelectedDiscount] = useState("");
+  const [checkoutMessage, setCheckoutMessage] = useState(null);
+  console.log(selectedDiscount);
 
   const updateQuantity = async (item) => {
     try {
@@ -59,6 +66,20 @@ export default function CartSidebar({
     }
   };
 
+  const handleCheckout = async (discountCode) => {
+    try {
+      const order = await checkout(discountCode);
+      console.log(order);
+      setCheckoutMessage(
+        `Order #${order.id} placed successfully! Total: $${order.final_amount}`
+      );
+      updateCart([]);
+    } catch (error) {
+      console.log(error.response?.data);
+      setCheckoutMessage(error.response?.data?.detail || "Checkout failed");
+    }
+  };
+
   const total = cartItems?.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -68,7 +89,7 @@ export default function CartSidebar({
     const fetchDiscounts = async () => {
       try {
         const data = await getAvailableDiscounts();
-        console.log(data)
+        console.log(data);
         if (data && data?.codes.length > 0) {
           setDiscounts(data.codes);
         }
@@ -166,10 +187,12 @@ export default function CartSidebar({
             {discounts.length > 0 && (
               <Box>
                 <Typography level="body-sm" mb={1}>
-                  Available Discounts
+                  Vouchers with 10% Instant Discount
                 </Typography>
                 <Box
                   component="select"
+                  value={selectedDiscount}
+                  onChange={(e) => setSelectedDiscount(e.target.value)}
                   sx={{
                     width: "100%",
                     p: 1.2,
@@ -185,7 +208,7 @@ export default function CartSidebar({
                     },
                   }}
                 >
-                  <option value="">-- Select a Discount --</option>
+                  <option value="">-- Select a Voucher --</option>
                   {discounts.map((discount) => (
                     <option key={discount} value={discount}>
                       {discount}
@@ -201,10 +224,38 @@ export default function CartSidebar({
               alignItems="center"
             >
               <Typography level="title-md">Total:</Typography>
-              <Typography level="title-lg">${total.toFixed(2)}</Typography>
+              <Stack direction="column" alignItems="flex-end" gap={0.5}>
+                {selectedDiscount ? (
+                  <>
+                    <Typography
+                      level="body-sm"
+                      sx={{
+                        textDecoration: "line-through",
+                        color: "text.secondary",
+                      }}
+                    >
+                      ${total.toFixed(2)}
+                    </Typography>
+                    <Typography
+                      level="title-lg"
+                      sx={{ color: "success.plainColor" }}
+                    >
+                      ${(total * 0.9).toFixed(2)}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography level="title-lg">${total.toFixed(2)}</Typography>
+                )}
+              </Stack>
             </Stack>
 
-            <Button fullWidth size="lg" variant="solid" color="primary">
+            <Button
+              fullWidth
+              size="lg"
+              variant="solid"
+              color="primary"
+              onClick={() => handleCheckout(selectedDiscount)}
+            >
               Proceed to Checkout
             </Button>
           </Box>
