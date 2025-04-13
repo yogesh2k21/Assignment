@@ -46,7 +46,6 @@ def get_available_discount_codes_service():
 
 # Handles the checkout process
 def checkout_service(checkout_request: CheckoutRequest = None):
-    print(store.cart)
     total_amount = sum(item.price * item.quantity for item in store.cart.values())
     discount_applied = False
     discount_amount = 0.0
@@ -86,8 +85,7 @@ def checkout_service(checkout_request: CheckoutRequest = None):
 
     store.cart.clear()
     return CheckoutResponse(
-        total_amount=total_amount,
-        discount_applied=discount_applied
+        total_amount=total_amount, discount_applied=discount_applied
     )
 
 
@@ -112,7 +110,6 @@ def get_store_status_service():
     )
     total_purchase_amount = sum(order["total_amount"] for order in store.order_history)
     discount_codes = [{code: status} for code, status in store.discount_codes.items()]
-    print(discount_codes)
     total_discount_amount = sum(
         order["discount_amount"] for order in store.order_history
     )
