@@ -20,7 +20,6 @@ import {
   getAvailableDiscounts,
   checkout,
 } from "../services/api";
-import CustomToaster from "./Snackbar/Toaster";
 import { toast, Bounce } from "react-toastify";
 
 export default function CartSidebar({
@@ -31,8 +30,6 @@ export default function CartSidebar({
 }) {
   const [discounts, setDiscounts] = useState([]);
   const [selectedDiscount, setSelectedDiscount] = useState("");
-  const [checkoutMessage, setCheckoutMessage] = useState(null);
-  console.log(selectedDiscount);
 
   const updateQuantity = async (item) => {
     try {
@@ -112,6 +109,19 @@ export default function CartSidebar({
       updateCart([]);
     } catch (error) {
       console.log(error.response?.data);
+      toast.error(
+        error.response?.data?.detail,
+        {
+          position: "bottom-left",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          transition: Bounce,
+        }
+      );
     }
   };
 
